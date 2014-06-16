@@ -1,6 +1,7 @@
 package org.woodley.aigrid.app;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import android.view.SoundEffectConstants;
 import android.view.View;
@@ -22,15 +23,18 @@ public class ImageAdapter extends BaseAdapter {
     int _nCols = 8; // this is also in the layout xml.
     int _level = 10;
 
+    int _gameId = 0;    // use to deactivate obsolete timer events if user keeps hitting replay
     int _currentlyDisplaying;
     ArrayList<Integer> _positions;
     ArrayList<Integer> _numerals;
     List<ImageView> _imageViews;
+    private Handler _handler = new Handler();
 
     public ImageAdapter(Context con) {
         _Context = con;
     }
     public void NewGame() {
+        _handler.removeCallbacks(hideNumbers);
         _positions = new ArrayList<Integer>();
         _numerals = new ArrayList<Integer>();
         _currentlyDisplaying = 0;
@@ -53,8 +57,20 @@ public class ImageAdapter extends BaseAdapter {
             tempHS.add(pos);
             _numerals.add(pos);     // 0 thru 9
         }
+        _handler.postDelayed(hideNumbers, 3000);
     }
-
+    private Runnable hideNumbers = new Runnable() {
+        @Override
+        public void run() {
+            for (int position = 0; position < getCount(); position++) {
+                int index = _positions.indexOf(position);
+                if (index == -1) continue;
+                int numeral = _numerals.get(index);
+                Log.i(TAG, "Hiding" + numeral);
+                _imageViews.get(index).setImageResource(R.drawable.flower);
+            }
+        }
+    };
     public int getCount() {
         return _nCols * _nRows;
     }
@@ -105,15 +121,19 @@ public class ImageAdapter extends BaseAdapter {
             R.drawable.numeral_9,
     };
 
-    public void handleClick(View view, int position) {
+    public void handleClick(ImageView imageView, int position) {
         // get numeral at position
         int index = _positions.indexOf(position);
         if (index == -1) {
-            view.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
+            //view.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
             return;
         }
         int numeral = _numerals.get(index);
         Log.i(TAG, "You touched " + numeral);
-        _imageViews.get(index).setImageResource(R.drawable.flower);
+//        _imageViews.get(index).setImageResource(R.drawable.flower);
+//        ImageView imageView = (ImageView) view.getItemAtPosition(position);
+        imageView.setImageResource(mThumbIds[numeral]);
+//        _imageViews.get(index).setImageResource(mThumbIds[numeral]);
+
     }
 }

@@ -10,6 +10,7 @@ import android.view.SoundEffectConstants;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 
@@ -30,7 +31,7 @@ public class MainActivity extends ActionBarActivity {
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Log.i(TAG, "At position " + position);
-                _imageAdapter.handleClick(gridview, position);
+                _imageAdapter.handleClick((ImageView) v, position);
                 //gridview.playSoundEffect(SoundEffectConstants.CLICK);
             }
         });
