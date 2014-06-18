@@ -1,6 +1,8 @@
 package org.woodley.aigrid.app;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.util.Log;
 import android.view.SoundEffectConstants;
@@ -16,28 +18,43 @@ import java.util.List;
 
 public class ImageAdapter extends BaseAdapter {
     private static final String    TAG                 = "ImageAdapter  ";
-    private Context _Context;
+    private MainActivity _Context;
+    AlertDialog _alertDialog;
 
     // constants
     int _nRows = 5;
     int _nCols = 8; // this is also in the layout xml.
-    int _level = 10;
+    int _level = 3; // numbers go from 0 to _level - 1
+    boolean _okToClick = false;
 
+    boolean _dontHide;  // used only for _milliseconds == -2 ('you control it' mode).
     int _gameId = 0;    // use to deactivate obsolete timer events if user keeps hitting replay
+    int _milliseconds = 250;    // chimp mode.
     int _currentlyDisplaying;
     ArrayList<Integer> _positions;
     ArrayList<Integer> _numerals;
     List<ImageView> _imageViews;
     private Handler _handler = new Handler();
+    int _lastClick;
 
-    public ImageAdapter(Context con) {
+    public ImageAdapter(MainActivity con) {
         _Context = con;
+        _alertDialog = new AlertDialog.Builder(_Context).create();
+        _alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                _alertDialog.cancel();
+            }
+        });
+        //alertDialog.setIcon(R.drawable.icon);
     }
-    public void NewGame() {
+    public void newGame() {
+        _dontHide = false;
         _handler.removeCallbacks(hideNumbers);
         _positions = new ArrayList<Integer>();
         _numerals = new ArrayList<Integer>();
+        _okToClick = false;
         _currentlyDisplaying = 0;
+        _lastClick = -1;
         _imageViews = new ArrayList<ImageView>(_level);
 
         _imageViews.clear();
@@ -52,12 +69,25 @@ public class ImageAdapter extends BaseAdapter {
 
             pos = -1;
             while (pos < 0 || tempHS.contains(pos)) {
-                pos = new Integer((int) (Math.random() * 10));
+                pos = new Integer((int) (Math.random() * _level));
             }
             tempHS.add(pos);
             _numerals.add(pos);     // 0 thru 9
         }
-        _handler.postDelayed(hideNumbers, 3000);
+        if (_milliseconds > 0)
+            _handler.postDelayed(hideNumbers, _milliseconds);
+        else
+            _okToClick = true;
+    }
+    public void setMode(int ms) {
+        _milliseconds = ms;
+    }
+    public void setLevel(int newLevel) {
+        _level = newLevel;
+        if (newLevel > 10) _level = 10;
+        if (newLevel < 3) _level = 3;
+
+        _Context.setTitle("You are at Level " + _level + ".");
     }
     private Runnable hideNumbers = new Runnable() {
         @Override
@@ -69,8 +99,17 @@ public class ImageAdapter extends BaseAdapter {
                 Log.i(TAG, "Hiding" + numeral);
                 _imageViews.get(index).setImageResource(R.drawable.flower);
             }
+            _okToClick = true;
         }
     };
+    private void showAll() {
+        for (int position = 0; position < getCount(); position++) {
+            int index = _positions.indexOf(position);
+            if (index == -1) continue;
+            int numeral = _numerals.get(index);
+            _imageViews.get(index).setImageResource(mThumbIds[numeral]);
+        }
+    }
     public int getCount() {
         return _nCols * _nRows;
     }
@@ -122,18 +161,41 @@ public class ImageAdapter extends BaseAdapter {
     };
 
     public void handleClick(ImageView imageView, int position) {
+        if (!_okToClick) return;
         // get numeral at position
+        if (_milliseconds == -2 && !_dontHide) {
+            hideNumbers.run();
+            _dontHide = true;
+        }
         int index = _positions.indexOf(position);
         if (index == -1) {
-            //view.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
             return;
         }
         int numeral = _numerals.get(index);
         Log.i(TAG, "You touched " + numeral);
+        imageView.setImageResource(mThumbIds[numeral]);
 //        _imageViews.get(index).setImageResource(R.drawable.flower);
 //        ImageView imageView = (ImageView) view.getItemAtPosition(position);
-        imageView.setImageResource(mThumbIds[numeral]);
 //        _imageViews.get(index).setImageResource(mThumbIds[numeral]);
 
+        if (numeral > ++_lastClick)
+            gameOver();
+        else {
+            if (numeral == _level - 1) {
+                setLevel(_level + 1);
+                showAlert("Good Job!!", "You Won!");
+            }
+        }
+    }
+    private void gameOver() {
+        _okToClick = false;
+        showAll();
+        setLevel(_level - 1);
+        showAlert("Fail!", "Game Over");
+    }
+    private void showAlert(String mess, String title) {
+        _alertDialog.setTitle(title);
+        _alertDialog.setMessage(mess + " Your level is now " + _level);
+        _alertDialog.show();
     }
 }

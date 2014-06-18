@@ -2,12 +2,45 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity" >
-    <item android:id="@+id/action_replay"
-        android:icon="@drawable/ic_action_replay"
-        android:title="@string/action_replay"
-        app:showAsAction="always" />
     <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+        android:title="Mode: "
+        android:icon="@drawable/chump"
         android:orderInCategory="100"
-        app:showAsAction="never" />
+        app:showAsAction="always">
+    <menu>
+        <group
+            android:checkableBehavior="single"
+            >
+            <item android:id="@+id/chimpMode"
+                android:title="Chimp Mode - .25 seconds"
+                android:icon="@drawable/chump"
+                android:orderInCategory="100"
+                app:showAsAction="never" />
+
+            <item android:id="@+id/childMode"
+                android:title="Child Mode - .5 seconds"
+                android:icon="@drawable/child"
+                android:orderInCategory="100"
+                app:showAsAction="never"/>
+
+            <item android:id="@+id/adultMode"
+                android:title="Adult Mode - 1 second"
+                android:icon="@drawable/adult"
+                android:orderInCategory="100"
+                app:showAsAction="never" />
+
+            <item android:id="@+id/practiceMode"
+                android:title="Practice Mode"
+                android:icon="@drawable/targetpractice"
+                android:orderInCategory="100"
+                app:showAsAction="never" />
+
+            <item android:id="@+id/youControlMode"
+                android:title="You Control"
+                android:icon="@drawable/babychimp"
+                android:orderInCategory="100"
+                app:showAsAction="never" />
+        </group>
+    </menu>
+    </item>
 </menu>
