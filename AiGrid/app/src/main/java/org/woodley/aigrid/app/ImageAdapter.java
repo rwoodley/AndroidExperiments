@@ -134,6 +134,7 @@ public class ImageAdapter extends BaseAdapter {
             imageView = (ImageView) convertView;
         }
 
+        Log.i(TAG, "Looking up " + position);
         int index = _positions.indexOf(position);
         if (index > -1) {
             _imageViews.set(index, imageView);
@@ -142,6 +143,8 @@ public class ImageAdapter extends BaseAdapter {
             Log.i(TAG, "Placing " + numeral + " at " + position);
 
             imageView.setImageResource(mThumbIds[numeral]);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
         }
         return imageView;
     }
