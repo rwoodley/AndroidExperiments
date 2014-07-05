@@ -3,8 +3,11 @@ package org.woodley.aigrid.app;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +28,8 @@ public class ImageAdapter extends BaseAdapter {
     int _nRows = 5;
     int _nCols = 8; // this is also in the layout xml.
     int _level = 3; // numbers go from 0 to _level - 1
+    int _hpx = -1;   // size of grid view square
+    int _wpx = -1;   // size of grid view square
     boolean _okToClick = false;
 
     boolean _dontHide;  // used only for _milliseconds == -2 ('you control it' mode).
@@ -46,6 +51,16 @@ public class ImageAdapter extends BaseAdapter {
             }
         });
         //alertDialog.setIcon(R.drawable.icon);
+
+        //Calculation of ImageView Size - density independent.
+        //Resources r = Resources.getSystem();
+        //float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, r.getDisplayMetrics());
+        //_hpx = (int) ((float) (r.getDisplayMetrics().heightPixels-32)/(_nRows));
+        //_wpx = (int) ((float) (r.getDisplayMetrics().widthPixels-128)/(_nCols));
+    }
+    public void setWH(int w, int h) {
+        _hpx = (int) ((float) (h-32)/(_nRows));
+        _wpx = (int) ((float) (w-128)/(_nCols));
     }
     public void newGame() {
         _dontHide = false;
@@ -127,9 +142,10 @@ public class ImageAdapter extends BaseAdapter {
         ImageView imageView;
         if (convertView == null) {  // if it's not recycled, initialize some attributes
             imageView = new ImageView(_Context);
-            imageView.setLayoutParams(new GridView.LayoutParams(65, 65));
+            imageView.setLayoutParams(new GridView.LayoutParams(_wpx, _hpx));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setPadding(8, 8, 8, 8);
+            //imageView.setPadding(8, 8, 8, 8);
+            imageView.setBackgroundColor(Color.GRAY);
         } else {
             imageView = (ImageView) convertView;
         }
@@ -144,7 +160,7 @@ public class ImageAdapter extends BaseAdapter {
 
             imageView.setImageResource(mThumbIds[numeral]);
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
+            imageView.setLayoutParams(new GridView.LayoutParams(_wpx, _hpx));
         }
         return imageView;
     }

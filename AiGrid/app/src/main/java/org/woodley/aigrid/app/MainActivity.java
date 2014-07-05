@@ -29,7 +29,7 @@ public class MainActivity extends ActionBarActivity {
 
         final GridView gridview = (GridView) findViewById(R.id.gridview);
         _imageAdapter = new ImageAdapter(this);
-        _imageAdapter.newGame();
+        _imageAdapter.newGame();        // scale will be all wrong, but we'll redraw it later. need to do this here for initialization.
         gridview.setAdapter(_imageAdapter);
 
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -62,6 +62,9 @@ public class MainActivity extends ActionBarActivity {
         item.setChecked(true);
         setMode(R.id.chimpMode, item);
         _imageAdapter.setLevel(3);
+        GridView gridview = (GridView) findViewById(R.id.gridview);
+        _imageAdapter.setWH(gridview.getWidth(), gridview.getHeight());
+        newGame();
         return super.onPrepareOptionsMenu(menu);
     }
     private boolean setMode(int id, MenuItem item) {
