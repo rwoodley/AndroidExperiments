@@ -111,7 +111,7 @@ public class ImageAdapter extends BaseAdapter {
                 int index = _positions.indexOf(position);
                 if (index == -1) continue;
                 int numeral = _numerals.get(index);
-                Log.i(TAG, "Hiding" + numeral);
+//                Log.i(TAG, "Hiding" + numeral);
                 _imageViews.get(index).setImageResource(R.drawable.whitesquare);
             }
             _okToClick = true;
@@ -150,13 +150,13 @@ public class ImageAdapter extends BaseAdapter {
             imageView = (ImageView) convertView;
         }
 
-        Log.i(TAG, "Looking up " + position);
+        //Log.i(TAG, "Looking up " + position);
         int index = _positions.indexOf(position);
         if (index > -1) {
             _imageViews.set(index, imageView);
 
             int numeral = _numerals.get(index);
-            Log.i(TAG, "Placing " + numeral + " at " + position);
+            //Log.i(TAG, "Placing " + numeral + " at " + position);
 
             imageView.setImageResource(mThumbIds[numeral]);
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -191,7 +191,7 @@ public class ImageAdapter extends BaseAdapter {
             return;
         }
         int numeral = _numerals.get(index);
-        Log.i(TAG, "You touched " + numeral);
+//        Log.i(TAG, "You touched " + numeral);
         imageView.setImageResource(mThumbIds[numeral]);
 
         if (numeral > ++_lastClick)

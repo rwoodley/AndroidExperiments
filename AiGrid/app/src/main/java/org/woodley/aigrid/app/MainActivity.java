@@ -35,12 +35,11 @@ public class MainActivity extends ActionBarActivity {
 
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Log.i(TAG, "At position " + position);
+//                Log.i(TAG, "At position " + position);
                 _imageAdapter.handleClick((ImageView) v, position);
-                //gridview.playSoundEffect(SoundEffectConstants.CLICK);
             }
         });
-        //ActionBar ab = this.getActionBar();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             getActionBar().setHomeButtonEnabled(true);
         }
@@ -49,7 +48,6 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -71,27 +69,22 @@ public class MainActivity extends ActionBarActivity {
     private boolean setMode(int id, MenuItem item) {
         int icon = 0;
         if (id == R.id.chimpMode) {
-//            setTitle("Chimp Mode");
             icon = R.drawable.chump;
             _imageAdapter.setMode(250);
         }
         else if (id == R.id.childMode) {
-//            setTitle("Child Mode");
             icon = R.drawable.child;
             _imageAdapter.setMode(500);
         }
         else if (id == R.id.adultMode) {
-//            setTitle("Adult Mode");
             icon = R.drawable.adult;
             _imageAdapter.setMode(1000);
         }
         else if (id == R.id.practiceMode) {
-//            setTitle("Practice Mode");
             icon = R.drawable.targetpractice;
             _imageAdapter.setMode(-1);
         }
         else if (id == R.id.youControlMode) {
-//            setTitle("Baby Chimp Mode");
             icon = R.drawable.babychimp;
             _imageAdapter.setMode(-2);
         }
