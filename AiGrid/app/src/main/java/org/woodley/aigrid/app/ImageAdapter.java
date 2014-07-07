@@ -112,7 +112,7 @@ public class ImageAdapter extends BaseAdapter {
                 if (index == -1) continue;
                 int numeral = _numerals.get(index);
                 Log.i(TAG, "Hiding" + numeral);
-                _imageViews.get(index).setImageResource(R.drawable.flower);
+                _imageViews.get(index).setImageResource(R.drawable.whitesquare);
             }
             _okToClick = true;
         }
@@ -145,7 +145,7 @@ public class ImageAdapter extends BaseAdapter {
             imageView.setLayoutParams(new GridView.LayoutParams(_wpx, _hpx));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             //imageView.setPadding(8, 8, 8, 8);
-            imageView.setBackgroundColor(Color.GRAY);
+            //imageView.setBackgroundColor(Color.GRAY);
         } else {
             imageView = (ImageView) convertView;
         }
@@ -167,16 +167,16 @@ public class ImageAdapter extends BaseAdapter {
 
     // references to our images
     private Integer[] mThumbIds = {
-            R.drawable.numeral_0,
-            R.drawable.numeral_1,
-            R.drawable.numeral_2,
-            R.drawable.numeral_3,
-            R.drawable.numeral_4,
-            R.drawable.numeral_5,
-            R.drawable.numeral_6,
-            R.drawable.numeral_7,
-            R.drawable.numeral_8,
-            R.drawable.numeral_9,
+            R.drawable.number0,
+            R.drawable.number1,
+            R.drawable.number2,
+            R.drawable.number3,
+            R.drawable.number4,
+            R.drawable.number5,
+            R.drawable.number6,
+            R.drawable.number7,
+            R.drawable.number8,
+            R.drawable.number9,
     };
 
     public void handleClick(ImageView imageView, int position) {
@@ -193,9 +193,6 @@ public class ImageAdapter extends BaseAdapter {
         int numeral = _numerals.get(index);
         Log.i(TAG, "You touched " + numeral);
         imageView.setImageResource(mThumbIds[numeral]);
-//        _imageViews.get(index).setImageResource(R.drawable.flower);
-//        ImageView imageView = (ImageView) view.getItemAtPosition(position);
-//        _imageViews.get(index).setImageResource(mThumbIds[numeral]);
 
         if (numeral > ++_lastClick)
             gameOver();

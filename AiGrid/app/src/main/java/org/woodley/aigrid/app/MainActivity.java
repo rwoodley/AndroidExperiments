@@ -2,6 +2,7 @@ package org.woodley.aigrid.app;
 
 import android.app.ActionBar;
 import android.content.ClipData;
+import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -56,7 +57,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
 
     public boolean onPrepareOptionsMenu(Menu menu) {
-        this.getActionBar().setIcon(R.drawable.ic_action_refresh);
+        this.getActionBar().setIcon(R.drawable.ayumu);
         _modeMenuItem = menu.findItem(R.id.action_settings);
         MenuItem item = menu.findItem(R.id.chimpMode);
         item.setChecked(true);
@@ -111,9 +112,13 @@ public class MainActivity extends ActionBarActivity {
 //        if (id == R.id.action_settings) {
 //            return true;
 //        }
-        if (item.getTitle().equals(this.getActionBar().getTitle())) { // there has got to be a better way.
-//        if (id == R.id.action_replay) {
+        if (item.getTitle().equals("New Game")) { // there has got to be a better way.
             newGame();
+            return true;
+        }
+        if (item.getTitle().equals("Help")) { // there has got to be a better way.
+            Intent myIntent = new Intent(this, AboutPageActivity.class);
+            this.startActivity(myIntent);
             return true;
         }
         if (setMode(id, item)) {
