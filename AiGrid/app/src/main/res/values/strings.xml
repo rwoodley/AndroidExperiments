@@ -5,5 +5,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_replay">Play!</string>
+    <string name="title_activity_about_page">AboutPageActivity</string>
 
 </resources>

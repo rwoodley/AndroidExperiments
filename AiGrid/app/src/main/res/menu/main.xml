@@ -2,6 +2,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity" >
+    <item android:id="@+id/action_newGame"
+        android:icon="@drawable/ic_action_refresh"
+        android:title="New Game"
+        app:showAsAction="always" />
     <item android:id="@+id/action_settings"
         android:title="Mode: "
         android:icon="@drawable/chump"
@@ -43,4 +47,8 @@
         </group>
     </menu>
     </item>
+    <item android:id="@+id/action_help"
+        android:icon="@drawable/ic_action_about"
+        android:title="Help"
+        app:showAsAction="always" />
 </menu>
