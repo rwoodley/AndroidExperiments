@@ -7,6 +7,8 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -27,6 +29,9 @@ public class AboutPageActivity extends Activity {
         WebView myWebView = (WebView) findViewById(R.id.webview);
         this.setTitle("About this game.");
         final Context ctx = this;
+        myWebView.setWebChromeClient(new WebChromeClient() {
+        });
+        /*
         myWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -49,8 +54,9 @@ public class AboutPageActivity extends Activity {
                 }
             }
         });
-
-
+        */
+        WebSettings w = myWebView.getSettings();
+        w.setPluginState(WebSettings.PluginState.ON);
         myWebView.loadUrl("http://rwoodley.org/MyContent/Ayumu/AyumuInfo.htm");
     }
 
