@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
+// based on: http://www.yougli.net/android/a-photoshop-like-color-picker-for-your-android-application/
+
 public class ColorPickerDialog extends Dialog {
     public interface OnColorChangedListener {
         void colorChanged(String key, int color1, int color2);

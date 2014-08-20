@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewTreeObserver;
@@ -22,10 +23,10 @@ import java.io.IOException;
 public class MainActivity extends Activity implements ColorPickerDialog.OnColorChangedListener {
     private static final String    TAG                 = "MainActivity";
 
-    private int HUE_LIMIT1 = 1;
-    private int HUE_LIMIT2 = 359;
-    private int _color1 = Color.HSVToColor(new float[]{HUE_LIMIT1, 1f, 1f});
-    private int _color2 = Color.HSVToColor( new float[]{ HUE_LIMIT2, 1f, 1f });;
+    private static int HUE_LIMIT1 = 359;
+    private static int HUE_LIMIT2 = 1;
+    private static int _color1 = Color.HSVToColor(new float[]{HUE_LIMIT1, 1f, 1f});
+    private static int _color2 = Color.HSVToColor( new float[]{ HUE_LIMIT2, 1f, 1f });;
 
     private byte[] _pictureData;
     private Object processorLocker = new Object();
@@ -33,7 +34,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
     private Camera mCamera;
 
     private SurfaceView _surfaceView;
-    ImageView _postProcessedImg;
+    ImageView _imageView;
     private Handler _processImageHandler;
     private Bitmap _postProcessedBmp;
     private boolean _firstTime = true;  // first time this instance.
@@ -48,13 +49,15 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             new Thread(binarizeImage).start();
             _processImageHandler = new Handler();
 
-            ImageView postProcessedImg = (ImageView) findViewById(R.id.processedImage);
-            ViewTreeObserver vto = postProcessedImg.getViewTreeObserver();
+            initializeCamera();
+            
+            ImageView imageView = (ImageView) findViewById(R.id.processedImage);
+            ViewTreeObserver vto = imageView.getViewTreeObserver();
             vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
                     if (_firstTime) {
-                        _postProcessedImg = (ImageView) findViewById(R.id.processedImage);
+                        _imageView = (ImageView) findViewById(R.id.processedImage);
                         initBitmap();
                     }
                     _firstTime = false;
@@ -64,14 +67,14 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             Log.e(TAG, "Error in onCreate()", exception);
         }
     }
-    private void openCamera() {
+    private void initializeCamera() {
         synchronized (cameraLocker) {
-            Log.w(TAG, "openCamera() called.");
+            Log.w(TAG, "initializeCamera() called.");
             try {
                 if (mCamera == null) {
-                    _surfaceView = new SurfaceView(this);
-                    mCamera = Camera.open();
-                    mCamera.setPreviewDisplay(_surfaceView.getHolder());
+                    _surfaceView = (SurfaceView) findViewById(R.id.cameraSurface);
+                    SurfaceHolder.Callback sh_callback = my_callback();
+                    _surfaceView.getHolder().addCallback(sh_callback);
                 }
             } catch (Exception exception) {
                 Log.e(TAG, "Error creating camera", exception);
@@ -82,9 +85,42 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             }
         }
     }
+    SurfaceHolder.Callback my_callback() {
+        SurfaceHolder.Callback ob1 = new SurfaceHolder.Callback() {
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                Log.w("_surfaceView.getHolder()", "-----surfaceDestroyed");
+                mCamera.stopPreview();
+                mCamera.release();
+                mCamera = null;
+            }
+
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                Log.w("_surfaceView.getHolder()", "-----surfaceCreated");
+                try {
+                    mCamera = Camera.open();
+                    mCamera.setPreviewDisplay(holder);
+                } catch (IOException exception) {
+                    mCamera.release();
+                    mCamera = null;
+                }
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width,
+                                       int height) {
+                Log.w("_surfaceView.getHolder()", "-----surfaceChanged");
+                mCamera.startPreview();
+                mCamera.takePicture(null, null, mPictureCallback);
+            }
+        };
+        return ob1;
+    }
     private void initBitmap() {
-        Bitmap postProcessedBmp = Bitmap.createBitmap(_postProcessedImg.getWidth(), _postProcessedImg.getHeight(), Config.RGB_565);
-        Log.w(TAG, "******in initBitmap(),w = " + _postProcessedImg.getWidth() + ", h = " + _postProcessedImg.getHeight());
+        Bitmap postProcessedBmp = Bitmap.createBitmap(_imageView.getWidth(), _imageView.getHeight(), Config.RGB_565);
+        Log.w(TAG, "******in initBitmap(),w = " + _imageView.getWidth() + ", h = " + _imageView.getHeight());
         for(int i = 0; i < postProcessedBmp.getHeight(); i++){
             for(int j = 0; j < postProcessedBmp.getWidth(); j++){
                 int pixel = postProcessedBmp.getPixel(j, i);
@@ -95,32 +131,14 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                 }
             }
         }
-        _postProcessedImg.setImageBitmap(postProcessedBmp);
-        Log.w(TAG, "******in initBitmap(),w = " + _postProcessedImg.getWidth() + ", h = " + _postProcessedImg.getHeight());
+        _imageView.setImageBitmap(postProcessedBmp);
+        Log.w(TAG, "******in initBitmap(),w = " + _imageView.getWidth() + ", h = " + _imageView.getHeight());
     }
     public void onStop() {
         super.onStop();  // Always call the superclass method first
         Log.w(TAG, "---onStop() called");
 
         _backgroundThreadShouldRun = false;
-    }
-    public void onPause() {
-        super.onPause();  // Always call the superclass method first
-        Log.w(TAG, "---onPause() called");
-
-        synchronized (cameraLocker) {
-            mCamera.release();
-            mCamera = null;
-        }
-    }
-    public void onResume() {
-        super.onResume();  // Always call the superclass method first
-        Log.w(TAG, "---onResume() called");
-        openCamera();
-    }
-    public void onDestroy() {
-        super.onDestroy();  // Always call the superclass method first
-        Log.w(TAG, "---onDestroy() called");
     }
 
     @Override
@@ -168,24 +186,21 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-//            Log.w("mPictureCallback", "got pic,data = " + data);
             synchronized (processorLocker) {
                 _pictureData = data;
-//                Log.w("mPictureCallback", "_pictureData = " + _pictureData);
+                mCamera.startPreview();
             }
         }
     };
-    public ImageView getPostProcessedImg() {
-        //Log.w(TAG, "******in getPostProcessedImg(),w = " + _postProcessedImg.getWidth() + ", h = " + _postProcessedImg.getHeight());
-        return _postProcessedImg;
+    public ImageView getimageView() {
+        return _imageView;
     }
     private Runnable postProcessedBinaryImage = new Runnable() {
         @Override
         public void run() {
             if (_backgroundThreadShouldRun) {
-//                Log.w(TAG, "******setting new bitmap(), w = " + _postProcessedBmp.getWidth() + ", h = " + _postProcessedBmp.getHeight());
-//                Log.w(TAG, "******setting new bitmap(), w = " + getPostProcessedImg().getWidth() + ", h = " + getPostProcessedImg().getHeight());
-                getPostProcessedImg().setImageBitmap(_postProcessedBmp);
+                Log.w(TAG, "******setting new bitmap(), w = " + getimageView().getWidth() + ", h = " + getimageView().getHeight());
+                getimageView().setImageBitmap(_postProcessedBmp);
             }
         }
     };
@@ -207,64 +222,96 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             }
         }
     }
+    private int getRotation() {
+        int rotation = _imageView.getDisplay().getRotation();
+        String mess = "";
+        if (rotation == Surface.ROTATION_0)
+            mess = "Surface.ROTATION_0";
+        else if (rotation == Surface.ROTATION_90)
+            mess = "Surface.ROTATION_90";
+        else if (rotation == Surface.ROTATION_180)
+            mess = "Surface.ROTATION_180";
+        else if (rotation == Surface.ROTATION_270)
+            mess = "Surface.ROTATION_270";
+        Log.w("getRotation()", mess);
+        return rotation;
+    }
     private Runnable binarizeImage = new Runnable() {
 
         @Override
         public void run() {
             boolean firstTime = true;
 
-            BitmapFactory.Options opts = new BitmapFactory.Options();
-
             while(_backgroundThreadShouldRun){
 
-//                Log.w("binarizeImage", "_pictureData = " + _pictureData);
                 if (mCamera == null) {
-//                    Log.e(TAG, "=====null camera, waiting 500ms=====");
+                    Log.e(TAG, "=====null camera, waiting 500ms=====");
                     try { Thread.sleep(500);} catch (InterruptedException e) { e.printStackTrace(); }
                     continue;
                 }
 
-                try {
-                    if (firstTime) { // take a pic to kick the whole thing off.
-                        firstTime = false;
-                        takePic();
-//                        Log.w(TAG, "==== sleep");
-                        try { Thread.sleep(1000);} catch (InterruptedException e) { e.printStackTrace(); }
-//                        Log.w(TAG, "==== wake");
-                        continue;
-                    }
-                }
-                catch(Exception e){e.printStackTrace();}
-
-                Bitmap preProcessedBmp;
                 if (_pictureData == null) {
-//                    Log.w(TAG, "==== no picture data, pause and retry");
+                    Log.w(TAG, "==== no picture data, pause and retry");
                     try { Thread.sleep(300);} catch (InterruptedException e) { e.printStackTrace(); }
                     continue;
                 }
 
+                Bitmap cameraBmp;
                 synchronized (processorLocker) {
 
-//                    Log.w(TAG, "==== got picture data");
-                    preProcessedBmp = BitmapFactory.decodeByteArray(_pictureData, 0, _pictureData.length, opts);
+                    Log.w(TAG, "==== got picture data");
+                    BitmapFactory.Options opts = new BitmapFactory.Options();
+                    opts.inJustDecodeBounds = true;
+                    BitmapFactory.decodeByteArray(_pictureData, 0, _pictureData.length, opts);
+                    opts.inSampleSize = opts.outWidth/_imageView.getWidth();
+                    opts.inJustDecodeBounds = false;
+                    Log.w(TAG, "inSampleSize = " + opts.inSampleSize);
+                    cameraBmp = BitmapFactory.decodeByteArray(_pictureData, 0, _pictureData.length, opts);
+                    Log.w(TAG, "==== begin process, w = " + cameraBmp.getWidth() + ", h = " + cameraBmp.getHeight());
+
                     _pictureData = null;
                 }
                 try{
                     //The size of this bmp must equals the one on the setPictureSize...
-                    Bitmap postProcessedBmp = Bitmap.createBitmap(preProcessedBmp.getWidth(), preProcessedBmp.getHeight(), Config.RGB_565);
-//                    Log.w(TAG, "==== begin process, w = " + preProcessedBmp.getWidth() + ", h = " + preProcessedBmp.getHeight());
+                    // But note, we're transposing the axes to rotate....
+
+                    int rotation = getRotation();
+                    Bitmap postProcessedBmp =
+                        (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) ?
+                        Bitmap.createBitmap(cameraBmp.getHeight(), cameraBmp.getWidth(), Config.RGB_565) :
+                        Bitmap.createBitmap(cameraBmp.getWidth(), cameraBmp.getHeight(), Config.RGB_565);
 
                     //outer_loop:
-                    for(int i = 0; i < preProcessedBmp.getHeight(); i++){
-                        for(int j = 0; j < preProcessedBmp.getWidth(); j++){
-                            int pixel = preProcessedBmp.getPixel(j, i);
+                    int[] pixels = new int[cameraBmp.getWidth() * cameraBmp.getHeight()];
+                    cameraBmp.getPixels(pixels, 0, cameraBmp.getWidth(), 0, 0, cameraBmp.getWidth(), cameraBmp.getHeight());
+                    for(int i = 0; i < cameraBmp.getHeight(); i++){
+                        for(int j = 0; j < cameraBmp.getWidth(); j++){
+                            //int pixel = cameraBmp.getPixel(j, i);
+                            int pixel = pixels[i*cameraBmp.getWidth()+j];
                             float[] hsv = new float[3];
                             Color.RGBToHSV(Color.red(pixel), Color.green(pixel), Color.blue(pixel), hsv);
                             int hue = (int)hsv[0];
+
+                            int ii = i, jj = j;
+
+                            if (rotation == Surface.ROTATION_90) {
+                                ii = j; jj = i;
+                            }
+                            else
+                            if (rotation == Surface.ROTATION_180) {
+                                ii = postProcessedBmp.getWidth() - i - 1;
+                                jj = postProcessedBmp.getHeight() - j - 1;
+                            }
+                            else
+                            if (rotation == Surface.ROTATION_270) {
+                                ii = j;
+                                jj = postProcessedBmp.getHeight() - i - 1;
+                            }
+
                             if(hue <= HUE_LIMIT1  && hue >= HUE_LIMIT2 ){
-                                postProcessedBmp.setPixel(j, i, pixel);
+                                postProcessedBmp.setPixel(ii, jj, pixel);
                             }else{
-                                postProcessedBmp.setPixel(j, i, Color.BLACK);
+                                postProcessedBmp.setPixel(ii, jj, Color.BLACK);
                             }
                         }
                     }
@@ -273,17 +320,14 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                     }
                     MainActivity.this._postProcessedBmp = postProcessedBmp;
 
-                    //Get the regions out of the image
-                    //regionDetector.startProcessingImg(postProcessedBmp);
-//                    Log.w(TAG, "==== end process");
+                    Log.w(TAG, "==== end process");
 
                     _processImageHandler.post(postProcessedBinaryImage);
                 }
                 catch(Exception e){e.printStackTrace();}
 
                 if(mCamera == null) {
-//                    Log.e(TAG, "=====null camera=====");
-                    break;
+                    break;  // in other words, the thread will died. Phone must be rotated to restart it.
                 }
                 takePic();
             }
