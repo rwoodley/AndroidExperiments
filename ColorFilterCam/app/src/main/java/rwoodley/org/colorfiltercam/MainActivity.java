@@ -34,7 +34,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
     private Camera mCamera;
 
     private SurfaceView _surfaceView;
-    ImageView _imageView;
+    ImageView _imageView = null;
     private Handler _processImageHandler;
     private Bitmap _postProcessedBmp;
     private boolean _firstTime = true;  // first time this instance.
@@ -43,6 +43,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
+            Log.e("test", "TEST");
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
 
@@ -52,12 +53,14 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             initializeCamera();
             
             ImageView imageView = (ImageView) findViewById(R.id.processedImage);
+            Log.w("onCreate", "imageView WxH = " + imageView.getWidth() + "," + imageView.getHeight());
             ViewTreeObserver vto = imageView.getViewTreeObserver();
             vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
                     if (_firstTime) {
                         _imageView = (ImageView) findViewById(R.id.processedImage);
+                        Log.w("onCreate", "_imageView WxH = " + _imageView.getWidth() + "," + _imageView.getHeight());
                         initBitmap();
                     }
                     _firstTime = false;
@@ -119,6 +122,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
         return ob1;
     }
     private void initBitmap() {
+        Log.w("initBitmap 1", "_imageView WxH = " + _imageView.getWidth() + "," + _imageView.getHeight());
         Bitmap postProcessedBmp = Bitmap.createBitmap(_imageView.getWidth(), _imageView.getHeight(), Config.RGB_565);
         Log.w(TAG, "******in initBitmap(),w = " + _imageView.getWidth() + ", h = " + _imageView.getHeight());
         for(int i = 0; i < postProcessedBmp.getHeight(); i++){
@@ -132,6 +136,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             }
         }
         _imageView.setImageBitmap(postProcessedBmp);
+        Log.w("initBitmap 2", "_imageView WxH = " + _imageView.getWidth() + "," + _imageView.getHeight());
         Log.w(TAG, "******in initBitmap(),w = " + _imageView.getWidth() + ", h = " + _imageView.getHeight());
     }
     public void onStop() {
@@ -186,6 +191,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
+            if (!_backgroundThreadShouldRun) return;
             synchronized (processorLocker) {
                 _pictureData = data;
                 mCamera.startPreview();
@@ -205,6 +211,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
         }
     };
     private void takePic() {
+        if (!_backgroundThreadShouldRun) return;
         boolean success = false;
         int nTries = 0;
         while (!success) {
@@ -218,7 +225,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
             catch (Exception e) {
                 e.printStackTrace();
                 nTries++;
-                if (nTries > 20) System.exit(0);    // yes, I know.
+                if (nTries > 5) break; // give up, maybe this class is being killed due to a rotate.
             }
         }
     }
@@ -263,6 +270,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                     BitmapFactory.Options opts = new BitmapFactory.Options();
                     opts.inJustDecodeBounds = true;
                     BitmapFactory.decodeByteArray(_pictureData, 0, _pictureData.length, opts);
+                    Log.w("binarizeImage", opts.outWidth + ", " + opts.outHeight);
                     opts.inSampleSize = opts.outWidth/_imageView.getWidth();
                     opts.inJustDecodeBounds = false;
                     Log.w(TAG, "inSampleSize = " + opts.inSampleSize);
@@ -274,6 +282,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                 try{
                     //The size of this bmp must equals the one on the setPictureSize...
                     // But note, we're transposing the axes to rotate....
+                    Log.w("bg thread", "_imageView WxH = " + _imageView.getWidth() + "," + _imageView.getHeight());
 
                     int rotation = getRotation();
                     Bitmap postProcessedBmp =
@@ -286,25 +295,28 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                     cameraBmp.getPixels(pixels, 0, cameraBmp.getWidth(), 0, 0, cameraBmp.getWidth(), cameraBmp.getHeight());
                     for(int i = 0; i < cameraBmp.getHeight(); i++){
                         for(int j = 0; j < cameraBmp.getWidth(); j++){
+                            if (!_backgroundThreadShouldRun) return;    // should do some sort of thread interrupt probably.
+
                             //int pixel = cameraBmp.getPixel(j, i);
                             int pixel = pixels[i*cameraBmp.getWidth()+j];
                             float[] hsv = new float[3];
                             Color.RGBToHSV(Color.red(pixel), Color.green(pixel), Color.blue(pixel), hsv);
                             int hue = (int)hsv[0];
 
-                            int ii = i, jj = j;
+                            int ii = postProcessedBmp.getWidth() - i - 1;
+                            int jj = j;
 
                             if (rotation == Surface.ROTATION_90) {
                                 ii = j; jj = i;
                             }
                             else
                             if (rotation == Surface.ROTATION_180) {
-                                ii = postProcessedBmp.getWidth() - i - 1;
+                                ii = i;
                                 jj = postProcessedBmp.getHeight() - j - 1;
                             }
                             else
                             if (rotation == Surface.ROTATION_270) {
-                                ii = j;
+                                ii = postProcessedBmp.getWidth() - j - 1;
                                 jj = postProcessedBmp.getHeight() - i - 1;
                             }
 
@@ -315,9 +327,11 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
                             }
                         }
                     }
+                    if (!_backgroundThreadShouldRun) return;    // should do some sort of thread interrupt probably.
                     if(MainActivity.this._postProcessedBmp != null){
                         MainActivity.this._postProcessedBmp.recycle();
                     }
+                    Log.w("binarizeImage", "res " + postProcessedBmp.getWidth() + "," + postProcessedBmp.getHeight());
                     MainActivity.this._postProcessedBmp = postProcessedBmp;
 
                     Log.w(TAG, "==== end process");
