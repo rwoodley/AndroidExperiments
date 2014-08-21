@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,7 +44,8 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
-            Log.e("test", "TEST");
+            DisplayMetrics metrics = getResources().getDisplayMetrics();
+            Log.e("onCreate", "Density is " + metrics.density);
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
 
