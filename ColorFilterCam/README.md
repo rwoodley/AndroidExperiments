@@ -1,6 +1,8 @@
-Simplest code possible to take a picture in Android. And let me tell you, it aint simple.   
+Messing around with the camera. Tried to simplify the camera code but it is super sluggish and still complicated.
 
-To be fair, there is another way to do this using intents which I didn't explore.   
+The problem was intercepting each frame to do the face detection. This makes it slow and violates the usual camera workflow where the user presses a button.
 
 This handles rotation.  I tried to do without the preview screen, but some devices require it. I suppose it could be shrunk to 1px.   
+
+It also has some simple color filter code.
 
