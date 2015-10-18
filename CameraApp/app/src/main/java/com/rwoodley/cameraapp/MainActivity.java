@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import java.io.File;
@@ -32,10 +33,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.i("bobtest", Boolean.toString(checkCameraHardware(getApplicationContext())));
+        initializeCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+    }
+    private void initializeCamera(int cameraDirection)
+    {
+        if (mCamera != null) {
+            FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+            preview.removeView(mPreview);
+            mPreview.surfaceDestroyed(mPreview.getHolder());
+        }
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
+        try {
+            mCamera = getCameraForDirection(cameraDirection);
+        }
+        catch (Exception e){
+            Log.e(TAG, "Error getting camera: " + e.getMessage());
+        }
 
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCamera);
@@ -45,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         mPicture = new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
+                Log.d(TAG, "----> Taking picture");
                 File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
                 if (pictureFile == null){
                     Log.d(TAG, "Error creating media file, check storage permissions: ");
@@ -68,29 +82,6 @@ public class MainActivity extends AppCompatActivity {
     }
     public void takePicture(View view) {
         mCamera.takePicture(null, null, mPicture);
-    }
-    /** A safe way to get an instance of the Camera object. */
-    public static Camera getCameraInstance(){
-        Camera c = null;
-        try {
-            c = getFrontFacingCamera();
-        }
-        catch (Exception e){
-            Log.e(TAG, "Error getting camera");
-            // Camera is not available (in use or does not exist)
-        }
-        return c; // returns null if camera is unavailable
-    }
-    public static Camera getFrontFacingCamera() {
-        int numberOfCameras = Camera.getNumberOfCameras();
-        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-        for (int i = 0; i < numberOfCameras; i++) {
-            Camera.getCameraInfo(i, cameraInfo);
-            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                return Camera.open(i);
-            }
-        }
-        return null;
     }
     private boolean checkCameraHardware(Context context) {
         if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
@@ -151,7 +142,31 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_snap) { // there has got to be a better way.
+            mCamera.takePicture(null, null, mPicture);
+            return true;
+        }
+        if (id == R.id.action_useFront) { // there has got to be a better way.
+            initializeCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            return true;
+        }
+        if (id == R.id.action_useBack) { // there has got to be a better way.
+            initializeCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
+    public static Camera getCameraForDirection(int cameraDirection) {
+        int numberOfCameras = Camera.getNumberOfCameras();
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == cameraDirection) {
+                return Camera.open(i);
+            }
+        }
+        return null;
+    }
+
 }

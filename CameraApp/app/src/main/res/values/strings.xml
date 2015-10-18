@@ -2,5 +2,8 @@
     <string name="app_name">CameraApp</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="action_snap">Snap Photo</string>
+    <string name="action_useFrontCamera">Use Front Camera</string>
+    <string name="action_useBackCamera">Use Back Camera</string>
     <string name="action_settings">Settings</string>
 </resources>

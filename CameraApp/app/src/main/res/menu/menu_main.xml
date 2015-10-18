@@ -1,6 +1,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
-</menu>
+
+    <item android:id="@+id/action_snap"
+        android:title="@string/action_snap"
+        app:showAsAction="always" />
+
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" >
+        <menu>
+
+        <item android:id="@+id/action_useFront"
+            android:title="@string/action_useFrontCamera"
+            app:showAsAction="always" />
+
+        <item android:id="@+id/action_useBack"
+            android:title="@string/action_useBackCamera"
+            app:showAsAction="always" />
+
+        </menu>
+    </item>
+
+    </menu>
