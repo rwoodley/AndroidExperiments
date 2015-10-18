@@ -18,7 +18,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public CameraPreview(Context context, Camera camera) {
         super(context);
         mCamera = camera;
+        mCamera.setDisplayOrientation(90);
 
+        if (mCamera != null) {
+            requestLayout();
+        }
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
         mHolder = getHolder();
@@ -30,6 +34,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
         try {
+            Camera.Parameters parameters = mCamera.getParameters();
+            Camera.Size mPreviewSize = parameters.getPreviewSize();
+
+            // we'll only change the height to match the camera aspect ratio.
+            // we'll keep the width equal to the screen width.
+            // this next line seems weird. you'd expect newH = ph/pw * width.
+            // Swapping aroud preview width and height seems necessary in portrait mode.
+            // If we ever support landscape mode, this will need to be adjested.
+            int height = (int) ((float) mPreviewSize.width/(float) mPreviewSize.height * (float) getWidth());
+
+            holder.setFixedSize(getWidth(), height);
+
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
         } catch (IOException e) {
@@ -68,11 +84,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // start preview with new settings
         try {
-            mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
-
         } catch (Exception e){
-            Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+            Log.e(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
 }

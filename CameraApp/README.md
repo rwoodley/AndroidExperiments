@@ -1,1 +1,1 @@
-Plain Vanilla, no frills camera app.   
+Plain Vanilla, no frills camera app.
